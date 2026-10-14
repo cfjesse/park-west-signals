@@ -1,6 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Artwork } from './artwork';
 
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
+
 describe('Artwork', () => {
   let component: Artwork;
   let fixture: ComponentFixture<Artwork>;
@@ -8,6 +12,11 @@ describe('Artwork', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Artwork],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideNoopAnimations(),
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Artwork);

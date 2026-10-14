@@ -2,7 +2,7 @@
   <div class="header-container">
     <div class="header-titles">
       <h1>Gallery Artworks & Artists</h1>
-      <p>Explore collection metrics, mediums, artistic styles, and featured artists.</p>
+      <p>Explore collection metrics, mediums, artistic styles, price ranges, and featured artists.</p>
     </div>
   </div>
 </header>
@@ -18,7 +18,7 @@
           </div>
           <div>
             <mat-card-title>Collection Distribution Metrics</mat-card-title>
-            <mat-card-subtitle>Live metrics breakdown across mediums and art styles</mat-card-subtitle>
+            <mat-card-subtitle>Live metrics breakdown across mediums, art styles, and price distributions</mat-card-subtitle>
           </div>
         </div>
 
@@ -28,20 +28,98 @@
             <strong>{{ totalPiecesCount() }}</strong> Artworks
           </span>
           <span class="metric-chip media-chip">
-            <mat-icon>palette</mat-icon>
+            <mat-icon>category</mat-icon>
             <strong>{{ totalMediaCount() }}</strong> Mediums
           </span>
           <span class="metric-chip style-chip">
             <mat-icon>brush</mat-icon>
             <strong>{{ totalStylesCount() }}</strong> Styles
           </span>
+          <span class="metric-chip artist-chip">
+            <mat-icon>groups</mat-icon>
+            <strong>{{ filteredArtists().length }}</strong> Artists
+          </span>
+          @if (isFiltered()) {
+          <span class="metric-chip active-filter-chip">
+            <mat-icon>filter_alt</mat-icon>
+            Filtered ({{ totalPiecesCount() }} of {{ totalAllPiecesCount() }})
+          </span>
+          }
         </div>
       </div>
     </mat-card-header>
 
     <mat-card-content class="metrics-card-content">
+      <!-- Dynamic Price Statistics: Lowest, Average, Median, Highest -->
+      <div class="price-stats-strip">
+        <div class="price-stat-card lowest-card">
+          <div class="stat-icon lowest">
+            <mat-icon>trending_down</mat-icon>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Lowest Price</span>
+            <span class="stat-value">
+              @if (lowestPrice() !== null) {
+                ${{ lowestPrice() | number }}
+              } @else {
+                —
+              }
+            </span>
+          </div>
+        </div>
+
+        <div class="price-stat-card average-card">
+          <div class="stat-icon average">
+            <mat-icon>insights</mat-icon>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Average Price</span>
+            <span class="stat-value">
+              @if (averagePrice() !== null) {
+                ${{ averagePrice() | number }}
+              } @else {
+                —
+              }
+            </span>
+          </div>
+        </div>
+
+        <div class="price-stat-card median-card">
+          <div class="stat-icon median">
+            <mat-icon>balance</mat-icon>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Median Price</span>
+            <span class="stat-value">
+              @if (medianPrice() !== null) {
+                ${{ medianPrice() | number }}
+              } @else {
+                —
+              }
+            </span>
+          </div>
+        </div>
+
+        <div class="price-stat-card highest-card">
+          <div class="stat-icon highest">
+            <mat-icon>trending_up</mat-icon>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Highest Price</span>
+            <span class="stat-value">
+              @if (highestPrice() !== null) {
+                ${{ highestPrice() | number }}
+              } @else {
+                —
+              }
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Responsive 3-Charts Grid -->
       <div class="charts-grid">
-        <!-- Media Metric Chart -->
+        <!-- Media Doughnut Chart -->
         <div class="chart-panel">
           <div class="panel-header">
             <div class="panel-title">
@@ -55,7 +133,7 @@
           </div>
         </div>
 
-        <!-- Style Metric Chart -->
+        <!-- Style Doughnut Chart -->
         <div class="chart-panel">
           <div class="panel-header">
             <div class="panel-title">
@@ -68,6 +146,20 @@
             <canvas #styleChartCanvas></canvas>
           </div>
         </div>
+
+        <!-- Price Range Line Chart (Updates reactively with filters) -->
+        <div class="chart-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <mat-icon class="panel-icon price-color">show_chart</mat-icon>
+              <span>Artworks Price Curve</span>
+            </div>
+            <span class="panel-count">{{ priceList().length }} pieces</span>
+          </div>
+          <div class="canvas-container">
+            <canvas #priceChartCanvas></canvas>
+          </div>
+        </div>
       </div>
     </mat-card-content>
   </mat-card>
@@ -77,7 +169,7 @@
     <div class="gallery-header-row">
       <div class="section-heading">
         <mat-icon>groups</mat-icon>
-        <h2>Artists Collection ({{ filteredArtists().length }} of {{ displayData().length }})</h2>
+        <h2>Artists Collection ({{ filteredArtists().length }} of {{ totalAllArtistsCount() }})</h2>
       </div>
 
       <!-- Filter Controls Toolbar -->
@@ -86,7 +178,7 @@
           <mat-label>Filter by Medium</mat-label>
           <mat-icon matPrefix class="filter-prefix-icon media-color">category</mat-icon>
           <mat-select [value]="selectedMedia()" (selectionChange)="onMediaChange($event.value)" placeholder="All Mediums">
-            <mat-option value="">All Mediums ({{ totalMediaCount() }})</mat-option>
+            <mat-option value="">All Mediums ({{ mediaOptions().length }})</mat-option>
             @for (opt of mediaOptions(); track opt.key) {
             <mat-option [value]="opt.key">
               {{ opt.label }} ({{ opt.count }})
@@ -104,7 +196,7 @@
           <mat-label>Filter by Style</mat-label>
           <mat-icon matPrefix class="filter-prefix-icon style-color">palette</mat-icon>
           <mat-select [value]="selectedStyle()" (selectionChange)="onStyleChange($event.value)" placeholder="All Styles">
-            <mat-option value="">All Styles ({{ totalStylesCount() }})</mat-option>
+            <mat-option value="">All Styles ({{ styleOptions().length }})</mat-option>
             @for (opt of styleOptions(); track opt.key) {
             <mat-option [value]="opt.key">
               {{ opt.label }} ({{ opt.count }})
@@ -118,10 +210,10 @@
           }
         </mat-form-field>
 
-        @if (selectedMedia() || selectedStyle()) {
+        @if (isFiltered()) {
         <button mat-stroked-button color="warn" class="clear-filters-btn" (click)="clearFilters()">
           <mat-icon>filter_alt_off</mat-icon>
-          <span>Reset</span>
+          <span>Reset Filters</span>
         </button>
         }
       </div>
@@ -165,7 +257,7 @@
     <div class="empty-filter-state">
       <mat-icon class="empty-icon">filter_list_off</mat-icon>
       <h3>No Artists Found</h3>
-      <p>No artists match the selected medium and style filters.</p>
+      <p>No artists or artworks match the selected filters.</p>
       <button mat-flat-button color="primary" (click)="clearFilters()">
         <mat-icon>refresh</mat-icon>
         <span>Reset Filters</span>

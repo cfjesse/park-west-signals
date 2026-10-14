@@ -1,5 +1,6 @@
 import { DecimalPipe } from '@angular/common';
 import {
+  ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
@@ -20,15 +21,56 @@ import {
   Chart,
   DoughnutController,
   ArcElement,
+  CategoryScale,
+  LineController,
+  LineElement,
+  PointElement,
+  Filler,
+  LinearScale,
   Tooltip,
   Legend,
   type ChartOptions,
 } from 'chart.js';
 import { ArtworkApi } from '../../services/artwork.api';
-import { ArtistData, ArtistDisplayData, Metrics } from '../../interfaces/app.interface';
+import { ArtistData, ArtistDisplayData } from '../../interfaces/app.interface';
 import { ArtistDialog } from '../artist-dialog/artist-dialog';
 
-Chart.register(DoughnutController, ArcElement, Tooltip, Legend);
+Chart.register(
+  DoughnutController,
+  ArcElement,
+  CategoryScale,
+  LineController,
+  LineElement,
+  PointElement,
+  Filler,
+  LinearScale,
+  Tooltip,
+  Legend
+);
+
+const DYNAMIC_PALETTE = [
+  '#2563eb', '#7c3aed', '#06b6d4', '#10b981', '#f59e0b',
+  '#ef4444', '#ec4899', '#8b5cf6', '#14b8a6', '#64748b',
+  '#3b82f6', '#d97706', '#6366f1', '#0ea5e9', '#22c55e',
+  '#f97316', '#a855f7', '#84cc16', '#e11d48', '#0284c7'
+];
+
+const TOOLTIP_STYLE = {
+  backgroundColor: 'rgba(15, 23, 42, 0.92)',
+  titleFont: { size: 13, weight: 'bold' as const },
+  bodyFont: { size: 12 },
+  cornerRadius: 8,
+};
+
+function aggregateCategories(items: ArtistData[]) {
+  const media: Record<string, number> = {};
+  const style: Record<string, number> = {};
+  for (const item of items) {
+    if (item.media) media[item.media] = (media[item.media] || 0) + 1;
+    if (item.style) style[item.style] = (style[item.style] || 0) + 1;
+  }
+  return { media, style };
+}
 
 @Component({
   imports: [
@@ -42,6 +84,7 @@ Chart.register(DoughnutController, ArcElement, Tooltip, Legend);
     MatDialogModule,
   ],
   selector: 'app-artwork',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './artwork.scss',
   templateUrl: './artwork.html',
 })
@@ -51,101 +94,107 @@ export class Artwork {
   private destroyRef = inject(DestroyRef);
   private artworkListApiResource = this.artworkApi.artworkListResource;
 
+  // Signal holding all artworks from API resource
   readonly artworkList = computed(() => this.artworkListApiResource.value() || []);
 
-  readonly displayData = computed<ArtistDisplayData[]>(() => {
+  // Filter signals
+  selectedMedia = signal<string>('');
+  selectedStyle = signal<string>('');
+
+  // Overall catalog metrics for dropdown options
+  readonly catalogMetrics = computed(() => aggregateCategories(this.artworkList()));
+
+  readonly mediaOptions = computed(() =>
+    Object.entries(this.catalogMetrics().media)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => ({ key, label: key, count }))
+  );
+
+  readonly styleOptions = computed(() =>
+    Object.entries(this.catalogMetrics().style)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => ({ key, label: key, count }))
+  );
+
+  // Filtered artworks reacting to active dropdown filters
+  readonly filteredArtworks = computed<ArtistData[]>(() => {
     const list = this.artworkList();
-    if (!list || list.length === 0) return [];
+    const media = this.selectedMedia();
+    const style = this.selectedStyle();
+    if (!media && !style) return list;
+    return list.filter((art) => (!media || art.media === media) && (!style || art.style === style));
+  });
+
+  // Artworks with valid prices, sorted ascending by price
+  readonly sortedPriceArtworks = computed(() =>
+    this.filteredArtworks()
+      .filter((art) => art.price != null && !isNaN(art.price))
+      .sort((a, b) => a.price - b.price)
+  );
+
+  // Dynamic priceList signal: sorted array of prices from filtered artworks
+  readonly priceList = computed<number[]>(() =>
+    this.sortedPriceArtworks().map((art) => art.price)
+  );
+
+  // Price summary metrics derived dynamically from priceList()
+  readonly lowestPrice = computed(() => this.priceList()[0] ?? null);
+  readonly highestPrice = computed(() => this.priceList().at(-1) ?? null);
+  readonly averagePrice = computed(() => {
+    const prices = this.priceList();
+    return prices.length ? Math.round(prices.reduce((sum, p) => sum + p, 0) / prices.length) : null;
+  });
+  readonly medianPrice = computed(() => {
+    const prices = this.priceList();
+    if (!prices.length) return null;
+    const mid = Math.floor(prices.length / 2);
+    return prices.length % 2 !== 0 ? prices[mid] : Math.round((prices[mid - 1] + prices[mid]) / 2);
+  });
+
+  // Filtered metrics for mediums and styles
+  readonly metricsDisplayData = computed(() => aggregateCategories(this.filteredArtworks()));
+
+  // Grouped filtered artists and the pieces they have in the selected category
+  readonly filteredArtists = computed<ArtistDisplayData[]>(() => {
+    const artworks = this.filteredArtworks();
+    if (!artworks.length) return [];
 
     const map = new Map<string, ArtistDisplayData>();
-    for (const artwork of list) {
-      const key = artwork.artist_id || artwork.artist_name;
+    for (const art of artworks) {
+      const key = art.artist_id || art.artist_name;
       let artist = map.get(key);
       if (!artist) {
         artist = {
-          artist_name: artwork.artist_name,
-          artist_avatar: artwork.artist_avatar?.replace(/300/, '60'),
-          artist_bio: artwork.artist_bio,
-          artist_id: artwork.artist_id,
+          artist_name: art.artist_name,
+          artist_avatar: art.artist_avatar?.replace(/300/, '60'),
+          artist_bio: art.artist_bio,
+          artist_id: art.artist_id,
           artworks: [],
         };
         map.set(key, artist);
       }
       artist.artworks.push({
-        id: artwork.id,
-        title: artwork.title,
-        media: artwork.media,
-        style: artwork.style,
-        date_created: artwork.date_created,
-        price: artwork.price,
-        size: artwork.size,
+        id: art.id,
+        title: art.title,
+        media: art.media,
+        style: art.style,
+        date_created: art.date_created,
+        price: art.price,
+        size: art.size,
       });
     }
     return Array.from(map.values());
   });
 
-  readonly metricsDisplayData = computed<Metrics>(() => {
-    const list = this.artworkList();
-    const metrics: Metrics = { style: {}, media: {} };
-    for (const artwork of list) {
-      if (artwork.style) {
-        metrics.style[artwork.style] = (metrics.style[artwork.style] || 0) + 1;
-      }
-      if (artwork.media) {
-        metrics.media[artwork.media] = (metrics.media[artwork.media] || 0) + 1;
-      }
-    }
-    return metrics;
-  });
+  // Total counts
+  readonly totalAllPiecesCount = computed(() => this.artworkList().length);
+  readonly totalPiecesCount = computed(() => this.filteredArtworks().length);
+  readonly totalMediaCount = computed(() => Object.keys(this.metricsDisplayData().media).length);
+  readonly totalStylesCount = computed(() => Object.keys(this.metricsDisplayData().style).length);
+  readonly totalAllArtistsCount = computed(() => new Set(this.artworkList().map((a) => a.artist_id || a.artist_name)).size);
+  readonly isFiltered = computed(() => !!this.selectedMedia() || !!this.selectedStyle());
 
-  selectedMedia = signal<string>('');
-  selectedStyle = signal<string>('');
-
-  readonly mediaOptions = computed(() => {
-    const mediaObj = this.metricsDisplayData().media;
-    return Object.keys(mediaObj).sort().map((key) => ({
-      key,
-      label: key,
-      count: mediaObj[key],
-    }));
-  });
-
-  readonly styleOptions = computed(() => {
-    const styleObj = this.metricsDisplayData().style;
-    return Object.keys(styleObj).sort().map((key) => ({
-      key,
-      label: key,
-      count: styleObj[key],
-    }));
-  });
-
-  readonly filteredArtists = computed<ArtistDisplayData[]>(() => {
-    const allArtists = this.displayData();
-    const mediaFilter = this.selectedMedia();
-    const styleFilter = this.selectedStyle();
-
-    if (!mediaFilter && !styleFilter) {
-      return allArtists;
-    }
-
-    return allArtists
-      .map((artist) => {
-        const matchingArtworks = artist.artworks.filter((art) => {
-          const matchMedia = !mediaFilter || art.media === mediaFilter;
-          const matchStyle = !styleFilter || art.style === styleFilter;
-          return matchMedia && matchStyle;
-        });
-
-        if (matchingArtworks.length === 0) return null;
-
-        return {
-          ...artist,
-          artworks: matchingArtworks,
-        };
-      })
-      .filter((artist): artist is ArtistDisplayData => artist !== null);
-  });
-
+  // Filter interaction
   onMediaChange(media: string): void {
     this.selectedMedia.set(media);
   }
@@ -154,139 +203,195 @@ export class Artwork {
     this.selectedStyle.set(style);
   }
 
+  toggleMediaFilter(media: string): void {
+    this.selectedMedia.update((curr) => (curr === media ? '' : media));
+  }
+
+  toggleStyleFilter(style: string): void {
+    this.selectedStyle.update((curr) => (curr === style ? '' : style));
+  }
+
   clearFilters(): void {
     this.selectedMedia.set('');
     this.selectedStyle.set('');
   }
 
-  readonly totalMediaCount = computed(() => Object.keys(this.metricsDisplayData().media).length);
-  readonly totalStylesCount = computed(() => Object.keys(this.metricsDisplayData().style).length);
-  readonly totalPiecesCount = computed(() => {
-    const styleCounts = Object.values(this.metricsDisplayData().style);
-    return styleCounts.reduce((acc, count) => acc + count, 0);
-  });
-
+  // Chart view children
   mediaChartCanvas = viewChild<ElementRef<HTMLCanvasElement>>('mediaChartCanvas');
   styleChartCanvas = viewChild<ElementRef<HTMLCanvasElement>>('styleChartCanvas');
+  priceChartCanvas = viewChild<ElementRef<HTMLCanvasElement>>('priceChartCanvas');
 
-  private mediaChart: Chart | null = null;
-  private styleChart: Chart | null = null;
+  private charts = new Map<string, Chart>();
 
   constructor() {
-    // 1. Reactively update charts whenever metricsDisplayData signal updates
+    // Reactively update all charts whenever filter signals or filteredArtworks change
     effect(() => {
-      const metrics = this.metricsDisplayData();
       const mediaEl = this.mediaChartCanvas()?.nativeElement;
       const styleEl = this.styleChartCanvas()?.nativeElement;
+      const priceEl = this.priceChartCanvas()?.nativeElement;
+      if (!mediaEl || !styleEl || !priceEl) return;
 
-      if (!mediaEl || !styleEl) return;
-      if (Object.keys(metrics.media).length === 0 && Object.keys(metrics.style).length === 0) return;
-
-      this.updateCharts(metrics, mediaEl, styleEl);
+      const { media, style } = this.metricsDisplayData();
+      this.renderDoughnut('media', mediaEl, media, 0, (label) => this.toggleMediaFilter(label));
+      this.renderDoughnut('style', styleEl, style, 4, (label) => this.toggleStyleFilter(label));
+      this.renderPriceLine(priceEl, this.sortedPriceArtworks());
     });
 
     this.destroyRef.onDestroy(() => {
-      this.mediaChart?.destroy();
-      this.styleChart?.destroy();
+      this.charts.forEach((chart) => chart.destroy());
+      this.charts.clear();
     });
   }
 
-  private updateCharts(metrics: Metrics, mediaCanvas: HTMLCanvasElement, styleCanvas: HTMLCanvasElement) {
-    const mediaLabels = Object.keys(metrics.media);
-    const mediaData = Object.values(metrics.media);
+  private renderDoughnut(
+    id: string,
+    canvas: HTMLCanvasElement,
+    dataMap: Record<string, number>,
+    paletteOffset: number,
+    onSliceClick: (label: string) => void
+  ): void {
+    const labels = Object.keys(dataMap);
+    const data = Object.values(dataMap);
+    const backgroundColor = labels.map((_, i) => DYNAMIC_PALETTE[(i + paletteOffset) % DYNAMIC_PALETTE.length]);
+    const chart = this.charts.get(id);
 
-    const styleLabels = Object.keys(metrics.style);
-    const styleData = Object.values(metrics.style);
-
-    // Media Chart
-    if (this.mediaChart && this.mediaChart.canvas === mediaCanvas) {
-      this.mediaChart.data.labels = mediaLabels;
-      this.mediaChart.data.datasets[0].data = mediaData;
-      this.mediaChart.update();
-    } else {
-      this.mediaChart?.destroy();
-      this.mediaChart = new Chart(mediaCanvas, {
-        type: 'doughnut',
-        data: {
-          labels: mediaLabels,
-          datasets: [{
-            data: mediaData,
-            backgroundColor: [
-              '#2563eb', '#7c3aed', '#06b6d4', '#10b981', '#f59e0b',
-              '#ef4444', '#ec4899', '#8b5cf6', '#14b8a6', '#64748b'
-            ],
-            borderWidth: 2,
-            borderColor: '#ffffff',
-            hoverOffset: 6,
-          }],
-        },
-        options: this.getChartOptions(),
-      });
+    if (chart && chart.canvas === canvas) {
+      chart.data.labels = labels;
+      chart.data.datasets[0].data = data;
+      chart.data.datasets[0].backgroundColor = backgroundColor;
+      chart.update();
+      return;
     }
 
-    // Style Chart
-    if (this.styleChart && this.styleChart.canvas === styleCanvas) {
-      this.styleChart.data.labels = styleLabels;
-      this.styleChart.data.datasets[0].data = styleData;
-      this.styleChart.update();
-    } else {
-      this.styleChart?.destroy();
-      this.styleChart = new Chart(styleCanvas, {
+    chart?.destroy();
+    this.charts.set(
+      id,
+      new Chart(canvas, {
         type: 'doughnut',
         data: {
-          labels: styleLabels,
-          datasets: [{
-            data: styleData,
-            backgroundColor: [
-              '#6366f1', '#0ea5e9', '#14b8a6', '#22c55e', '#eab308',
-              '#f97316', '#f43f5e', '#a855f7', '#3b82f6', '#64748b'
-            ],
-            borderWidth: 2,
-            borderColor: '#ffffff',
-            hoverOffset: 6,
-          }],
+          labels,
+          datasets: [{ data, backgroundColor, borderWidth: 2, borderColor: '#ffffff', hoverOffset: 6 }],
         },
-        options: this.getChartOptions(),
-      });
-    }
+        options: this.getDoughnutChartOptions(onSliceClick),
+      })
+    );
   }
 
-  private getChartOptions(): ChartOptions<'doughnut'> {
+  private renderPriceLine(canvas: HTMLCanvasElement, artworks: ArtistData[]): void {
+    const data = artworks.map((art, i) => ({
+      x: i + 1,
+      y: art.price,
+      title: art.title,
+      artist: art.artist_name,
+    }));
+    const chart = this.charts.get('price');
+
+    if (chart && chart.canvas === canvas) {
+      chart.data.datasets[0].data = data;
+      chart.update();
+      return;
+    }
+
+    chart?.destroy();
+    this.charts.set(
+      'price',
+      new Chart(canvas, {
+        type: 'line',
+        data: {
+          datasets: [{
+            label: 'Artwork Price Curve',
+            data,
+            borderColor: '#059669',
+            backgroundColor: 'rgba(5, 150, 105, 0.12)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2,
+            pointRadius: artworks.length > 50 ? 0 : 3,
+            pointHoverRadius: 6,
+            pointBackgroundColor: '#059669',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+          }],
+        },
+        options: this.getLineChartOptions(),
+      })
+    );
+  }
+
+  private getDoughnutChartOptions(onSliceClick: (label: string) => void): ChartOptions<'doughnut'> {
     return {
       responsive: true,
       maintainAspectRatio: false,
+      onClick: (_event, elements, chart) => {
+        const index = elements[0]?.index;
+        const label = index != null ? (chart.data.labels?.[index] as string) : undefined;
+        if (label) onSliceClick(label);
+      },
+      onHover: (event, elements) => {
+        const target = event.native?.target as HTMLElement | undefined;
+        if (target) target.style.cursor = elements.length ? 'pointer' : 'default';
+      },
       plugins: {
         legend: {
           position: 'right',
           labels: {
             usePointStyle: true,
             pointStyle: 'circle',
-            padding: 12,
+            padding: 10,
             boxWidth: 8,
             boxHeight: 8,
-            font: {
-              family: 'Roboto, "Helvetica Neue", sans-serif',
-              size: 11,
-              weight: 'bold',
-            },
+            font: { family: 'Roboto, sans-serif', size: 11, weight: 'bold' },
             color: '#334155',
           },
         },
         tooltip: {
-          backgroundColor: 'rgba(15, 23, 42, 0.9)',
-          titleFont: { size: 13, weight: 'bold' },
-          bodyFont: { size: 12 },
+          ...TOOLTIP_STYLE,
           padding: 10,
-          cornerRadius: 8,
           callbacks: {
-            label: (context: any) => ` ${context.label}: ${context.raw} pieces`,
+            label: (ctx) => ` ${ctx.label}: ${ctx.raw} pieces`,
           },
         },
       },
       cutout: '35%',
-      animation: {
-        duration: 750,
+      animation: { duration: 500 },
+    };
+  }
+
+  private getLineChartOptions(): ChartOptions<'line'> {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'nearest', intersect: false, axis: 'x' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          ...TOOLTIP_STYLE,
+          padding: 12,
+          callbacks: {
+            title: (items: any[]) => items[0]?.raw?.title || 'Artwork',
+            label: (ctx: any) => {
+              const { y, artist } = ctx.raw || {};
+              const price = y ?? ctx.parsed?.y ?? 0;
+              return `${artist ? ` by ${artist}` : ''} • $${Number(price).toLocaleString()}`;
+            },
+          },
+        },
       },
+      scales: {
+        x: {
+          type: 'linear',
+          title: { display: true, text: 'Artworks (Ranked by Price)', color: '#334155', font: { size: 11, weight: 'bold' } },
+          grid: { color: '#f1f5f9' },
+          ticks: { color: '#64748b', precision: 0 },
+        },
+        y: {
+          title: { display: true, text: 'Price ($)', color: '#334155', font: { size: 11, weight: 'bold' } },
+          beginAtZero: true,
+          grid: { color: '#f1f5f9' },
+          ticks: { color: '#64748b', callback: (val) => `$${Number(val).toLocaleString()}` },
+        },
+      },
+      animation: { duration: 500 },
     };
   }
 

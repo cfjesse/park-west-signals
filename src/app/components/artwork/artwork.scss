@@ -132,6 +132,17 @@
         background: #f5f3ff;
         color: #6d28d9;
       }
+
+      &.artist-chip {
+        background: #f0fdf4;
+        color: #15803d;
+      }
+
+      &.active-filter-chip {
+        background: #fef3c7;
+        color: #b45309;
+        border: 1px solid #fde68a;
+      }
     }
   }
 
@@ -139,10 +150,89 @@
     padding: 24px !important;
   }
 
+  .price-stats-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+
+    .price-stat-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+      }
+
+      .stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        mat-icon {
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
+        }
+
+        &.lowest {
+          background: #ecfdf5;
+          color: #059669;
+        }
+
+        &.average {
+          background: #eff6ff;
+          color: #2563eb;
+        }
+
+        &.median {
+          background: #fffbeb;
+          color: #d97706;
+        }
+
+        &.highest {
+          background: #faf5ff;
+          color: #7c3aed;
+        }
+      }
+
+      .stat-details {
+        display: flex;
+        flex-direction: column;
+
+        .stat-label {
+          font-size: 12px;
+          font-weight: 600;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 2px;
+        }
+
+        .stat-value {
+          font-size: 22px;
+          font-weight: 700;
+          color: #0f172a;
+          letter-spacing: -0.5px;
+        }
+      }
+    }
+  }
+
   .charts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 20px;
   }
 
   .chart-panel {
@@ -178,6 +268,41 @@
 
           &.style-color {
             color: #7c3aed;
+          }
+
+          &.price-color {
+            color: #059669;
+          }
+
+          &.artist-color {
+            color: #0284c7;
+          }
+        }
+      }
+
+      .panel-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .chart-toggle-btn {
+          width: 30px;
+          height: 30px;
+          line-height: 30px;
+          color: #64748b;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+          }
+
+          &:hover {
+            color: #005cbb;
+            background: #eff6ff;
           }
         }
       }

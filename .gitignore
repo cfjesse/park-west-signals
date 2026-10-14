@@ -39,6 +39,8 @@ testem.log
 /typings
 __screenshots__/
 /.agents
+.agents/
+.agents/rules/angular-signals.md
 angular-signals.md
 
 # System files

@@ -48,6 +48,9 @@ export interface Metrics {
   media: {
     [key: string]: number;
   };
+  priceRange: {
+    [key: string]: number;
+  };
 }
 
 export interface ArtworkItem {
