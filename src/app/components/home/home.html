@@ -1,0 +1,224 @@
+<div class="page-container">
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-titles">
+      <h1 class="page-title">Customer Directory</h1>
+      <p class="page-subtitle">Search, filter, and manage registered art collectors and client portfolios</p>
+    </div>
+    <div class="header-actions">
+      <span class="count-pill">
+        <mat-icon class="count-icon">groups</mat-icon>
+        <span>{{ customerListFilterd().length }} of {{ customerList().length }} Customers</span>
+      </span>
+      <mat-button-toggle-group [value]="selectedView()" (change)="onViewChange($event.value)" aria-label="Display View">
+        <mat-button-toggle value="card" aria-label="Card view">
+          <mat-icon>grid_view</mat-icon>
+          <span class="toggle-text">Cards</span>
+        </mat-button-toggle>
+        <mat-button-toggle value="table" aria-label="Table view">
+          <mat-icon>table_rows</mat-icon>
+          <span class="toggle-text">Table</span>
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+      <button mat-flat-button color="primary" class="refresh-btn" (click)="onRefresh()"
+        matTooltip="Reload customer data">
+        <mat-icon>refresh</mat-icon>
+        <span>Refresh</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Search & View Controls Card -->
+  <mat-card class="search-card" appearance="outlined">
+    <form class="search-form" (submit)="$event.preventDefault()">
+      <div class="search-inputs">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search collectors</mat-label>
+          <input matInput type="search" placeholder="Search by name, email, phone, or address..."
+            [formField]="searchForm.keyword" />
+          <mat-icon matPrefix class="field-icon">search</mat-icon>
+          @if (search().keyword) {
+          <button mat-icon-button matSuffix (click)="clearSearch()" type="button" aria-label="Clear search">
+            <mat-icon>close</mat-icon>
+          </button>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Filter by field</mat-label>
+          <mat-icon matPrefix class="field-icon">filter_list</mat-icon>
+          <mat-select [formField]="searchForm.filter">
+            @for (option of selectMenu; track option.key) {
+            <mat-option [value]="option.key">{{ option.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+      </div>
+
+      <div class="view-controls">
+        <mat-checkbox [checked]="caseSensitive()" (change)="onCaseSensitiveChange($event.checked)">
+          Case Sensitive</mat-checkbox>
+      </div>
+    </form>
+    <div class="errors">
+      @if (searchForm.keyword().touched() &&
+      searchForm.keyword().invalid()) {
+      <div class="error-messages alert">
+        @for (
+        error of searchForm.keyword().errors();
+        track $index
+        ) {
+        <p>{{ error.message }}</p>
+        }
+      </div>
+      }
+    </div>
+  </mat-card>
+
+  <!-- Results Content -->
+  <section class="results-section">
+    @if (customersResource.isLoading()) {
+    <div class="state-card loading-state">
+      <mat-spinner diameter="48" color="primary"></mat-spinner>
+      <div class="state-text">
+        <h3>Loading Customer Profiles</h3>
+        <p>Fetching records from Art Gallery API...</p>
+      </div>
+    </div>
+    } @else if (customersResource.error()) {
+    <div class="state-card error-state">
+      <mat-icon class="state-icon error-icon">error_outline</mat-icon>
+      <div class="state-text">
+        <h3>Connection Error</h3>
+        <p>Unable to load customers. Please verify that the art-api server is running on port 3000.</p>
+      </div>
+      <button mat-stroked-button color="primary" (click)="onRefresh()">
+        <mat-icon>refresh</mat-icon>
+        <span>Retry Connection</span>
+      </button>
+    </div>
+    } @else {
+    @if (customerListFilterd().length === 0) {
+    <div class="state-card empty-state">
+      <mat-icon class="state-icon empty-icon">person_search</mat-icon>
+      <div class="state-text">
+        <h3>No Matching Customers Found</h3>
+        <p>No collectors match your current search query "{{ search().keyword }}".</p>
+      </div>
+      @if (search().keyword) {
+      <button mat-flat-button color="primary" (click)="clearSearch()">
+        <mat-icon>clear</mat-icon>
+        <span>Clear Search Filter</span>
+      </button>
+      }
+    </div>
+    } @else if (selectedView() === "card") {
+    <!-- Card Grid View -->
+    <div class="cards-grid">
+      @for (customer of customerListFilterd(); track customer.id) {
+      <mat-card appearance="outlined" class="customer-card clickable-card" (click)="openEditModal(customer)"
+        matTooltip="Click to edit details">
+        <mat-card-header class="card-header">
+          <div mat-card-avatar class="customer-avatar">
+            {{ customer.name | initials }}
+          </div>
+          <mat-card-title class="customer-name">{{ customer.name }}</mat-card-title>
+          <mat-card-subtitle class="customer-email">
+            <mat-icon class="inline-icon">mail_outline</mat-icon>
+            <span>{{ customer.email || 'No email provided' }}</span>
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content class="card-body">
+          <div class="info-row">
+            <mat-icon class="info-icon">phone</mat-icon>
+            <span class="info-value">{{ customer.phone || 'No phone' }}</span>
+          </div>
+          <div class="info-row">
+            <mat-icon class="info-icon">place</mat-icon>
+            <span class="info-value">{{ customer.address || 'No address on file' }}</span>
+          </div>
+        </mat-card-content>
+
+        <div class="card-footer">
+          <span class="credit-label">Available Credit</span>
+          <span class="credit-badge" [class.has-credit]="customer.credit > 0">
+            ${{ customer.credit | number }}
+          </span>
+        </div>
+      </mat-card>
+      }
+    </div>
+    } @else if (selectedView() === "table") {
+    <!-- Table View -->
+    <mat-card appearance="outlined" class="table-card">
+      <div class="table-container">
+        <table mat-table [dataSource]="customerListFilterd()" class="customer-table">
+          <!-- Name Column with Avatar -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef class="th-name">Customer</th>
+            <td mat-cell *matCellDef="let customer" class="td-name">
+              <div class="table-customer-cell">
+                <div class="table-avatar">{{ customer.name | initials }}</div>
+                <div class="table-customer-meta">
+                  <span class="table-customer-name">{{ customer.name }}</span>
+                  <span class="table-customer-email">{{ customer.email }}</span>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Email Column -->
+          <ng-container matColumnDef="email">
+            <th mat-header-cell *matHeaderCellDef>Email</th>
+            <td mat-cell *matCellDef="let customer">
+              <div class="cell-with-icon">
+                <mat-icon class="cell-icon">email</mat-icon>
+                <span>{{ customer.email }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Phone Column -->
+          <ng-container matColumnDef="phone">
+            <th mat-header-cell *matHeaderCellDef>Phone</th>
+            <td mat-cell *matCellDef="let customer">
+              <div class="cell-with-icon">
+                <mat-icon class="cell-icon">phone</mat-icon>
+                <span>{{ customer.phone }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Address Column -->
+          <ng-container matColumnDef="address">
+            <th mat-header-cell *matHeaderCellDef>Address</th>
+            <td mat-cell *matCellDef="let customer">
+              <div class="cell-with-icon">
+                <mat-icon class="cell-icon">location_on</mat-icon>
+                <span class="truncate-address">{{ customer.address }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Credit Column -->
+          <ng-container matColumnDef="credit">
+            <th mat-header-cell *matHeaderCellDef class="th-credit">Credit</th>
+            <td mat-cell *matCellDef="let customer" class="td-credit">
+              <span class="table-credit-badge" [class.has-credit]="customer.credit > 0">
+                {{ customer.credit | currency }}
+              </span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="['name', 'email', 'phone', 'address', 'credit']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['name', 'email', 'phone', 'address', 'credit']"
+            class="customer-row clickable-row" (click)="openEditModal(row)"></tr>
+        </table>
+      </div>
+    </mat-card>
+    }
+    }
+  </section>
+</div>

@@ -1,1 +1,34 @@
-/* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
+@import '@angular/material/prebuilt-themes/azure-blue.css';
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  background-color: #f6f8fc;
+  color: #1a1b1f;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Material theme variable fine-tuning */
+:root {
+  --primary-azure: #005cbb;
+  --primary-azure-container: #d7e3ff;
+  --primary-azure-on-container: #00458f;
+  --surface-subtle: #f0f4fa;
+  --border-subtle: #e2e7f0;
+}
+
+/* Angular Material Dialog panel polish */
+.mat-mdc-dialog-panel {
+  .mat-mdc-dialog-surface {
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35) !important;
+  }
+}

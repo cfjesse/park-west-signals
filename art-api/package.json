@@ -1,0 +1,19 @@
+{
+  "name": "art-api",
+  "version": "1.0.0",
+  "description": "Express + libSQL/Turso API for artworks, customers and artists",
+  "type": "module",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "seed": "node src/seed.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

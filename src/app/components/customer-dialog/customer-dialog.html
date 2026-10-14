@@ -1,0 +1,90 @@
+<div class="dialog-header-wrap">
+  <div class="header-titles">
+    <div class="customer-avatar">{{ customer.name | initials }}</div>
+    <div>
+      <h2 mat-dialog-title class="dialog-title">Edit Collector Profile</h2>
+      <p class="dialog-subtitle">Update contact, account, and directory details</p>
+    </div>
+  </div>
+  <button mat-icon-button (click)="dialogRef.close()" [disabled]="isSaving()" aria-label="Close dialog">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content class="dialog-content mat-typography">
+  @if (isSaving()) {
+  <div class="dialog-loading-overlay">
+    <mat-spinner diameter="44" strokeWidth="4"></mat-spinner>
+    <div class="loading-text">
+      <span class="loading-title">Updating Profile</span>
+      <span class="loading-sub">Waiting for server confirmation...</span>
+    </div>
+  </div>
+  }
+
+  @if (updateError()) {
+  <div class="alert-banner error-alert">
+    <mat-icon>error</mat-icon>
+    <span>{{ updateError() }}</span>
+  </div>
+  }
+
+  <form class="edit-form" (submit)="$event.preventDefault(); saveEdit()">
+    <div class="form-grid">
+      <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-label>Full Name</mat-label>
+        <input matInput [value]="formData().name" (input)="updateField('name', $event)" [disabled]="isSaving()" placeholder="Full Name" required />
+        <mat-icon matPrefix>person</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field">
+        <mat-label>Email Address</mat-label>
+        <input matInput type="email" [value]="formData().email" (input)="updateField('email', $event)" [disabled]="isSaving()" placeholder="email@example.com" required />
+        <mat-icon matPrefix>email</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field">
+        <mat-label>Phone Number</mat-label>
+        <input matInput type="tel" [value]="formData().phone" (input)="updateField('phone', $event)" [disabled]="isSaving()" placeholder="555-0199" />
+        <mat-icon matPrefix>phone</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-label>Address</mat-label>
+        <input matInput [value]="formData().address" (input)="updateField('address', $event)" [disabled]="isSaving()" placeholder="Street, City, Province" />
+        <mat-icon matPrefix>place</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field">
+        <mat-label>Age</mat-label>
+        <input matInput type="number" min="0" max="150" [value]="formData().age" (input)="updateField('age', $event)" [disabled]="isSaving()" />
+        <mat-icon matPrefix>cake</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field">
+        <mat-label>Available Credit ($)</mat-label>
+        <input matInput type="number" min="0" [value]="formData().credit" (input)="updateField('credit', $event)" [disabled]="isSaving()" />
+        <mat-icon matPrefix>attach_money</mat-icon>
+      </mat-form-field>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="dialog-actions">
+  <button mat-button type="button" (click)="dialogRef.close()" [disabled]="isSaving()">
+    Cancel
+  </button>
+  <button mat-flat-button color="primary" type="button" (click)="saveEdit()" [disabled]="isSaving()">
+    @if (isSaving()) {
+    <span class="btn-spinner-wrap">
+      <mat-spinner diameter="18"></mat-spinner>
+      <span>Saving...</span>
+    </span>
+    } @else {
+    <span class="btn-spinner-wrap">
+      <mat-icon>save</mat-icon>
+      <span>Save Changes</span>
+    </span>
+    }
+  </button>
+</mat-dialog-actions>

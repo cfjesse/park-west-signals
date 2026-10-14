@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "ng serve --proxy-config proxy.conf.json",
+    "api": "node --watch art-api/src/server.js",
+    "seed": "node art-api/src/seed.js",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
@@ -11,13 +13,19 @@
   "private": true,
   "packageManager": "npm@11.19.1",
   "dependencies": {
+    "@angular/cdk": "^22.2.2",
     "@angular/common": "^22.2.0",
     "@angular/compiler": "^22.2.0",
     "@angular/core": "^22.2.0",
     "@angular/forms": "^22.2.0",
+    "@angular/material": "^22.2.2",
     "@angular/platform-browser": "^22.2.0",
     "@angular/router": "^22.2.0",
+    "@libsql/client": "^0.18.0",
+    "chart.js": "^4.5.1",
+    "express": "^5.3.0",
     "rxjs": "~7.8.0",
+    "serverless-http": "^4.0.0",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
