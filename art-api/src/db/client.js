@@ -4,7 +4,9 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from '../config/index.js';
 
-const SCHEMA_FILE = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 'schema.sql');
+const SCHEMA_FILE = (typeof import.meta !== 'undefined' && import.meta?.url)
+  ? resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 'schema.sql')
+  : resolve(process.cwd(), 'art-api', 'schema.sql');
 
 const isLocalFile = (url) => typeof url === 'string' && (url.startsWith('file:') || url === ':memory:');
 

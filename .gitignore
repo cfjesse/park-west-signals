@@ -38,6 +38,7 @@ yarn-error.log
 testem.log
 /typings
 __screenshots__/
+/.agents
 
 # System files
 .DS_Store
@@ -47,3 +48,4 @@ Thumbs.db
 .netlify/
 .env
 art-api/data/*.db
+*.db
