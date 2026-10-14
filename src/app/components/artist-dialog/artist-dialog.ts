@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, linkedSignal, signal, untracked } from '@angular/core';
 import {
   MAT_DIALOG_DATA,
   MatDialogModule,
@@ -26,17 +26,29 @@ import { ArtworkApi } from '../../services/artwork.api';
   styleUrl: './artist-dialog.scss',
 })
 export class ArtistDialog {
-  readonly artist: ArtistDisplayData = inject(MAT_DIALOG_DATA);
+  readonly artistData = signal<ArtistDisplayData>(inject(MAT_DIALOG_DATA));
+  get artist(): ArtistDisplayData {
+    return this.artistData();
+  }
+
   readonly dialogRef = inject(MatDialogRef<ArtistDialog>);
   private artworkApi = inject(ArtworkApi);
 
-  readonly formData = signal({
-    name: this.artist?.artist_name || '',
-    avatar: this.artist?.artist_avatar || '',
-    bio: this.artist?.artist_bio || '',
+
+  readonly formData = linkedSignal({
+    source: this.artistData,
+    computation: (artist) => ({
+      name: artist?.artist_name || '',
+      avatar: artist?.artist_avatar || '',
+      bio: artist?.artist_bio || '',
+    }),
   });
 
-  readonly localError = signal<string | null>(null);
+  readonly localError = linkedSignal({
+    source: this.formData,
+    computation: () => null as string | null,
+  });
+
   readonly updateError = computed(() => this.localError() || this.artworkApi.updateError());
   readonly isSubmitting = signal<boolean>(false);
   readonly isSaving = computed(
@@ -79,7 +91,6 @@ export class ArtistDialog {
       return;
     }
 
-    this.localError.set(null);
     this.isSubmitting.set(true);
     this.dialogRef.disableClose = true;
 

@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, linkedSignal, signal, untracked } from '@angular/core';
 import {
   MAT_DIALOG_DATA,
   MatDialogModule,
@@ -28,20 +28,33 @@ import { InitialsPipe } from '../../pipes/initials-pipe';
   styleUrl: './customer-dialog.scss',
 })
 export class CustomerDialog {
-  readonly customer: Customer = inject(MAT_DIALOG_DATA);
+  readonly customerData = signal<Customer>(inject(MAT_DIALOG_DATA));
+  get customer(): Customer {
+    return this.customerData();
+  }
+
   readonly dialogRef = inject(MatDialogRef<CustomerDialog>);
   private customerApi = inject(CustomerApi);
 
-  readonly formData = signal({
-    name: this.customer?.name || '',
-    email: this.customer?.email || '',
-    phone: this.customer?.phone || '',
-    address: this.customer?.address || '',
-    credit: this.customer?.credit ?? 0,
-    age: this.customer?.age ?? 30,
+  // Linked signal: Initializes and resets form data whenever underlying customer changes
+  readonly formData = linkedSignal({
+    source: this.customerData,
+    computation: (c) => ({
+      name: c?.name || '',
+      email: c?.email || '',
+      phone: c?.phone || '',
+      address: c?.address || '',
+      credit: c?.credit ?? 0,
+      age: c?.age ?? 30,
+    }),
   });
 
-  readonly localError = signal<string | null>(null);
+  // Linked signal: Automatically clears validation errors whenever the user modifies form fields
+  readonly localError = linkedSignal({
+    source: this.formData,
+    computation: () => null as string | null,
+  });
+
   readonly updateError = computed(() => this.localError() || this.customerApi.updateError());
   readonly isSubmitting = signal<boolean>(false);
   readonly isSaving = computed(
@@ -94,7 +107,6 @@ export class CustomerDialog {
       return;
     }
 
-    this.localError.set(null);
     this.isSubmitting.set(true);
     this.dialogRef.disableClose = true;
 
