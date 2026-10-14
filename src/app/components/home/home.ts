@@ -105,11 +105,21 @@ export class Home {
     applyWhen(
       path.keyword,
       () =>
-        this.search().filter === 'phone' ||
+        this.search().filter === 'phone',
+      (keyword) => {
+        pattern(keyword, /^[0-9\-]+$/, {
+          message: 'Search term must contain only numbers and hyphens.',
+        });
+      }
+    );
+
+    applyWhen(
+      path.keyword,
+      () =>
         this.search().filter === 'credit',
       (keyword) => {
-        pattern(keyword, /^[0-9-]+$/, {
-          message: 'Search term must contain only numbers and hyphens.',
+        pattern(keyword, /^[0-9\.]+$/, {
+          message: 'Search term must contain only numbers and dots.',
         });
       }
     );
@@ -122,7 +132,7 @@ export class Home {
     const customerList = this.customerList();
     const caseSensitive = this.caseSensitive();
 
-    if (!searchTerm.keyword || searchTerm.keyword.length < 2) return customerList;
+    if (!searchTerm.keyword || searchTerm.keyword.length < 2 || this.searchForm.keyword().invalid()) return customerList;
 
     return customerList.filter((customer) => {
       const searchKey = this.fuzzySearch() ? this.applyFuzzySearch(searchTerm.keyword) : searchTerm.keyword;
