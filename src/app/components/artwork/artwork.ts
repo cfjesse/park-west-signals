@@ -1,4 +1,4 @@
-import { DecimalPipe } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -75,7 +75,7 @@ function aggregateCategories(items: ArtistData[]) {
 
 @Component({
   imports: [
-    DecimalPipe,
+    CurrencyPipe,
     MatCardModule,
     MatIconModule,
     MatButtonModule,

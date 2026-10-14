@@ -18,7 +18,8 @@
           </div>
           <div>
             <mat-card-title>Collection Distribution Metrics</mat-card-title>
-            <mat-card-subtitle>Live metrics breakdown across mediums, art styles, and price distributions</mat-card-subtitle>
+            <mat-card-subtitle>Live metrics breakdown across mediums, art styles, and price
+              distributions</mat-card-subtitle>
           </div>
         </div>
 
@@ -60,9 +61,9 @@
             <span class="stat-label">Lowest Price</span>
             <span class="stat-value">
               @if (lowestPrice() !== null) {
-                ${{ lowestPrice() | number }}
+              {{ lowestPrice() | currency }}
               } @else {
-                —
+              —
               }
             </span>
           </div>
@@ -76,9 +77,9 @@
             <span class="stat-label">Average Price</span>
             <span class="stat-value">
               @if (averagePrice() !== null) {
-                ${{ averagePrice() | number }}
+              {{ averagePrice() | currency }}
               } @else {
-                —
+              —
               }
             </span>
           </div>
@@ -92,9 +93,9 @@
             <span class="stat-label">Median Price</span>
             <span class="stat-value">
               @if (medianPrice() !== null) {
-                ${{ medianPrice() | number }}
+              {{ medianPrice() | currency }}
               } @else {
-                —
+              —
               }
             </span>
           </div>
@@ -108,9 +109,9 @@
             <span class="stat-label">Highest Price</span>
             <span class="stat-value">
               @if (highestPrice() !== null) {
-                ${{ highestPrice() | number }}
+              {{ highestPrice() | currency }}
               } @else {
-                —
+              —
               }
             </span>
           </div>
@@ -177,12 +178,14 @@
         <mat-form-field appearance="outline" class="filter-dropdown" subscriptSizing="dynamic">
           <mat-label>Filter by Medium</mat-label>
           <mat-icon matPrefix class="filter-prefix-icon media-color">category</mat-icon>
-          <mat-select [value]="selectedMedia()" (selectionChange)="onMediaChange($event.value)" multiple placeholder="All Mediums">
+          <mat-select [value]="selectedMedia()" (selectionChange)="onMediaChange($event.value)" multiple
+            placeholder="All Mediums">
             <mat-select-trigger>
               @if (selectedMedia().length === 1) {
-                {{ selectedMedia()[0] }}
+              {{ selectedMedia()[0] }}
               } @else if (selectedMedia().length > 1) {
-                <span>{{ selectedMedia()[0] }} <span class="more-count">(+{{ selectedMedia().length - 1 }} others)</span></span>
+              <span>{{ selectedMedia()[0] }} <span class="more-count">(+{{ selectedMedia().length - 1 }}
+                  others)</span></span>
               }
             </mat-select-trigger>
             @for (opt of mediaOptions(); track opt.key) {
@@ -192,7 +195,8 @@
             }
           </mat-select>
           @if (selectedMedia().length > 0) {
-          <button mat-icon-button matSuffix (click)="$event.stopPropagation(); onMediaChange([])" aria-label="Clear medium">
+          <button mat-icon-button matSuffix (click)="$event.stopPropagation(); onMediaChange([])"
+            aria-label="Clear medium">
             <mat-icon>close</mat-icon>
           </button>
           }
@@ -201,12 +205,14 @@
         <mat-form-field appearance="outline" class="filter-dropdown" subscriptSizing="dynamic">
           <mat-label>Filter by Style</mat-label>
           <mat-icon matPrefix class="filter-prefix-icon style-color">palette</mat-icon>
-          <mat-select [value]="selectedStyle()" (selectionChange)="onStyleChange($event.value)" multiple placeholder="All Styles">
+          <mat-select [value]="selectedStyle()" (selectionChange)="onStyleChange($event.value)" multiple
+            placeholder="All Styles">
             <mat-select-trigger>
               @if (selectedStyle().length === 1) {
-                {{ selectedStyle()[0] }}
+              {{ selectedStyle()[0] }}
               } @else if (selectedStyle().length > 1) {
-                <span>{{ selectedStyle()[0] }} <span class="more-count">(+{{ selectedStyle().length - 1 }} others)</span></span>
+              <span>{{ selectedStyle()[0] }} <span class="more-count">(+{{ selectedStyle().length - 1 }}
+                  others)</span></span>
               }
             </mat-select-trigger>
             @for (opt of styleOptions(); track opt.key) {
@@ -216,7 +222,8 @@
             }
           </mat-select>
           @if (selectedStyle().length > 0) {
-          <button mat-icon-button matSuffix (click)="$event.stopPropagation(); onStyleChange([])" aria-label="Clear style">
+          <button mat-icon-button matSuffix (click)="$event.stopPropagation(); onStyleChange([])"
+            aria-label="Clear style">
             <mat-icon>close</mat-icon>
           </button>
           }
@@ -236,13 +243,16 @@
     <div class="artists-grid">
       @for(item of data; track item.artist_id) {
       <article class="artist-card">
-        <div class="artist-card-header clickable-artist-header" (click)="openEditModal(item)" matTooltip="Click to edit artist details">
+        <div class="artist-card-header clickable-artist-header" (click)="openEditModal(item)"
+          matTooltip="Click to edit artist details">
           <img class="artist-avatar" [src]="item.artist_avatar" alt="{{item.artist_name}}" />
           <div class="artist-info">
             <h3>{{item.artist_name}}</h3>
-            <span class="artwork-count-tag">{{ item.artworks.length }} piece{{ item.artworks.length === 1 ? '' : 's' }}</span>
+            <span class="artwork-count-tag">{{ item.artworks.length }} piece{{ item.artworks.length === 1 ? '' : 's'
+              }}</span>
           </div>
-          <button mat-icon-button class="edit-artist-btn" (click)="$event.stopPropagation(); openEditModal(item)" matTooltip="Edit Artist Information" aria-label="Edit artist">
+          <button mat-icon-button class="edit-artist-btn" (click)="$event.stopPropagation(); openEditModal(item)"
+            matTooltip="Edit Artist Information" aria-label="Edit artist">
             <mat-icon>edit</mat-icon>
           </button>
         </div>
@@ -258,7 +268,7 @@
                 <span class="tag size-tag">{{ art.size }}</span>
               </div>
             </div>
-            <span class="artwork-item-price">${{ art.price | number }}</span>
+            <span class="artwork-item-price">{{ art.price | currency }}</span>
           </div>
           }
         </div>
