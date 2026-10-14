@@ -177,16 +177,22 @@
         <mat-form-field appearance="outline" class="filter-dropdown" subscriptSizing="dynamic">
           <mat-label>Filter by Medium</mat-label>
           <mat-icon matPrefix class="filter-prefix-icon media-color">category</mat-icon>
-          <mat-select [value]="selectedMedia()" (selectionChange)="onMediaChange($event.value)" placeholder="All Mediums">
-            <mat-option value="">All Mediums ({{ mediaOptions().length }})</mat-option>
+          <mat-select [value]="selectedMedia()" (selectionChange)="onMediaChange($event.value)" multiple placeholder="All Mediums">
+            <mat-select-trigger>
+              @if (selectedMedia().length === 1) {
+                {{ selectedMedia()[0] }}
+              } @else if (selectedMedia().length > 1) {
+                <span>{{ selectedMedia()[0] }} <span class="more-count">(+{{ selectedMedia().length - 1 }} others)</span></span>
+              }
+            </mat-select-trigger>
             @for (opt of mediaOptions(); track opt.key) {
             <mat-option [value]="opt.key">
               {{ opt.label }} ({{ opt.count }})
             </mat-option>
             }
           </mat-select>
-          @if (selectedMedia()) {
-          <button mat-icon-button matSuffix (click)="$event.stopPropagation(); onMediaChange('')" aria-label="Clear medium">
+          @if (selectedMedia().length > 0) {
+          <button mat-icon-button matSuffix (click)="$event.stopPropagation(); onMediaChange([])" aria-label="Clear medium">
             <mat-icon>close</mat-icon>
           </button>
           }
@@ -195,16 +201,22 @@
         <mat-form-field appearance="outline" class="filter-dropdown" subscriptSizing="dynamic">
           <mat-label>Filter by Style</mat-label>
           <mat-icon matPrefix class="filter-prefix-icon style-color">palette</mat-icon>
-          <mat-select [value]="selectedStyle()" (selectionChange)="onStyleChange($event.value)" placeholder="All Styles">
-            <mat-option value="">All Styles ({{ styleOptions().length }})</mat-option>
+          <mat-select [value]="selectedStyle()" (selectionChange)="onStyleChange($event.value)" multiple placeholder="All Styles">
+            <mat-select-trigger>
+              @if (selectedStyle().length === 1) {
+                {{ selectedStyle()[0] }}
+              } @else if (selectedStyle().length > 1) {
+                <span>{{ selectedStyle()[0] }} <span class="more-count">(+{{ selectedStyle().length - 1 }} others)</span></span>
+              }
+            </mat-select-trigger>
             @for (opt of styleOptions(); track opt.key) {
             <mat-option [value]="opt.key">
               {{ opt.label }} ({{ opt.count }})
             </mat-option>
             }
           </mat-select>
-          @if (selectedStyle()) {
-          <button mat-icon-button matSuffix (click)="$event.stopPropagation(); onStyleChange('')" aria-label="Clear style">
+          @if (selectedStyle().length > 0) {
+          <button mat-icon-button matSuffix (click)="$event.stopPropagation(); onStyleChange([])" aria-label="Clear style">
             <mat-icon>close</mat-icon>
           </button>
           }

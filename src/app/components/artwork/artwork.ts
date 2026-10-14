@@ -98,9 +98,9 @@ export class Artwork {
   // Signal holding all artworks from API resource
   readonly artworkList = computed(() => this.artworkListApiResource.value() || []);
 
-  // Filter signals
-  selectedMedia = signal<string>('');
-  selectedStyle = signal<string>('');
+  // Filter signals (multi-select arrays)
+  selectedMedia = signal<string[]>([]);
+  selectedStyle = signal<string[]>([]);
 
   // Overall catalog metrics for dropdown options
   readonly catalogMetrics = computed(() => aggregateCategories(this.artworkList()));
@@ -122,8 +122,12 @@ export class Artwork {
     const list = this.artworkList();
     const media = this.selectedMedia();
     const style = this.selectedStyle();
-    if (!media && !style) return list;
-    return list.filter((art) => (!media || art.media === media) && (!style || art.style === style));
+    if (!media.length && !style.length) return list;
+    return list.filter(
+      (art) =>
+        (!media.length || (art.media && media.includes(art.media))) &&
+        (!style.length || (art.style && style.includes(art.style)))
+    );
   });
 
   // Artworks with valid prices, sorted ascending by price
@@ -139,8 +143,8 @@ export class Artwork {
   );
 
   // Price summary metrics derived dynamically from priceList()
-  readonly lowestPrice = computed(() => this.priceList()[0] || null);
-  readonly highestPrice = computed(() => this.priceList()[this.priceList().length - 1] || null);
+  readonly lowestPrice = linkedSignal(() => this.priceList()[0] || null);
+  readonly highestPrice = linkedSignal(() => this.priceList()[this.priceList().length - 1] || null);
   readonly averagePrice = computed(() => {
     const prices = this.priceList();
     return prices.length ? Math.round(prices.reduce((sum, p) => sum + p, 0) / prices.length) : null;
@@ -193,28 +197,32 @@ export class Artwork {
   readonly totalMediaCount = linkedSignal(() => Object.keys(this.metricsDisplayData().media).length);
   readonly totalStylesCount = linkedSignal(() => Object.keys(this.metricsDisplayData().style).length);
   readonly totalAllArtistsCount = linkedSignal(() => new Set(this.artworkList().map((a) => a.artist_id || a.artist_name)).size);
-  readonly isFiltered = computed(() => !!this.selectedMedia() || !!this.selectedStyle());
+  readonly isFiltered = computed(() => this.selectedMedia().length > 0 || this.selectedStyle().length > 0);
 
   // Filter interaction
-  onMediaChange(media: string): void {
-    this.selectedMedia.set(media);
+  onMediaChange(media: string[]): void {
+    this.selectedMedia.set(media ?? []);
   }
 
-  onStyleChange(style: string): void {
-    this.selectedStyle.set(style);
+  onStyleChange(style: string[]): void {
+    this.selectedStyle.set(style ?? []);
   }
 
   toggleMediaFilter(media: string): void {
-    this.selectedMedia.update((curr) => (curr === media ? '' : media));
+    this.selectedMedia.update((curr) =>
+      curr.includes(media) ? curr.filter((m) => m !== media) : [...curr, media]
+    );
   }
 
   toggleStyleFilter(style: string): void {
-    this.selectedStyle.update((curr) => (curr === style ? '' : style));
+    this.selectedStyle.update((curr) =>
+      curr.includes(style) ? curr.filter((s) => s !== style) : [...curr, style]
+    );
   }
 
   clearFilters(): void {
-    this.selectedMedia.set('');
-    this.selectedStyle.set('');
+    this.selectedMedia.set([]);
+    this.selectedStyle.set([]);
   }
 
   // Chart view children
