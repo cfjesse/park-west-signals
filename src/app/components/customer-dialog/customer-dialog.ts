@@ -36,7 +36,6 @@ export class CustomerDialog {
   readonly dialogRef = inject(MatDialogRef<CustomerDialog>);
   private customerApi = inject(CustomerApi);
 
-  // Linked signal: Initializes and resets form data whenever underlying customer changes
   readonly formData = linkedSignal({
     source: this.customerData,
     computation: (c) => ({
@@ -49,7 +48,6 @@ export class CustomerDialog {
     }),
   });
 
-  // Linked signal: Automatically clears validation errors whenever the user modifies form fields
   readonly localError = linkedSignal({
     source: this.formData,
     computation: () => null as string | null,

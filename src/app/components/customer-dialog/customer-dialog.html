@@ -33,44 +33,50 @@
     <div class="form-grid">
       <mat-form-field appearance="outline" class="form-field full-width">
         <mat-label>Full Name</mat-label>
-        <input matInput [value]="formData().name" (input)="updateField('name', $event)" [disabled]="isSaving()" placeholder="Full Name" required />
+        <input matInput [value]="formData().name" (input)="updateField('name', $event)" [disabled]="isSaving()"
+          placeholder="Full Name" required />
         <mat-icon matPrefix>person</mat-icon>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="form-field">
         <mat-label>Email Address</mat-label>
-        <input matInput type="email" [value]="formData().email" (input)="updateField('email', $event)" [disabled]="isSaving()" placeholder="email@example.com" required />
+        <input matInput type="email" [value]="formData().email" (input)="updateField('email', $event)"
+          [disabled]="isSaving()" placeholder="email@example.com" required />
         <mat-icon matPrefix>email</mat-icon>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="form-field">
         <mat-label>Phone Number</mat-label>
-        <input matInput type="tel" [value]="formData().phone" (input)="updateField('phone', $event)" [disabled]="isSaving()" placeholder="555-0199" />
+        <input matInput type="tel" [value]="formData().phone" (input)="updateField('phone', $event)"
+          [disabled]="isSaving()" placeholder="555-0199" />
         <mat-icon matPrefix>phone</mat-icon>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="form-field full-width">
         <mat-label>Address</mat-label>
-        <input matInput [value]="formData().address" (input)="updateField('address', $event)" [disabled]="isSaving()" placeholder="Street, City, Province" />
+        <input matInput [value]="formData().address" (input)="updateField('address', $event)" [disabled]="isSaving()"
+          placeholder="Street, City, Province" />
         <mat-icon matPrefix>place</mat-icon>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="form-field">
         <mat-label>Age</mat-label>
-        <input matInput type="number" min="0" max="150" [value]="formData().age" (input)="updateField('age', $event)" [disabled]="isSaving()" />
+        <input matInput type="number" min="0" max="150" [value]="formData().age" (input)="updateField('age', $event)"
+          [disabled]="isSaving()" />
         <mat-icon matPrefix>cake</mat-icon>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="form-field">
         <mat-label>Available Credit ($)</mat-label>
-        <input matInput type="number" min="0" [value]="formData().credit" (input)="updateField('credit', $event)" [disabled]="isSaving()" />
+        <input matInput type="number" min="0" [value]="formData().credit" (input)="updateField('credit', $event)"
+          [disabled]="isSaving()" />
         <mat-icon matPrefix>attach_money</mat-icon>
       </mat-form-field>
     </div>
   </form>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end" class="dialog-actions">
+<mat-dialog-actions class="dialog-actions">
   <button mat-button type="button" (click)="dialogRef.close()" [disabled]="isSaving()">
     Cancel
   </button>

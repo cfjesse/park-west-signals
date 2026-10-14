@@ -1,6 +1,7 @@
 <div class="dialog-header-wrap">
   <div class="header-titles">
-    <img class="dialog-artist-avatar" [src]="formData().avatar || artist.artist_avatar" alt="{{ artist.artist_name }}" />
+    <img class="dialog-artist-avatar" [src]="formData().avatar || artist.artist_avatar"
+      alt="{{ artist.artist_name }}" />
     <div>
       <h2 mat-dialog-title class="dialog-title">Edit Artist Profile</h2>
       <p class="dialog-subtitle">Update artist name, avatar image URL, and biography</p>
@@ -33,26 +34,29 @@
     <div class="form-grid">
       <mat-form-field appearance="outline" class="form-field full-width">
         <mat-label>Artist Full Name</mat-label>
-        <input matInput [value]="formData().name" (input)="updateField('name', $event)" [disabled]="isSaving()" placeholder="Artist Name" required />
+        <input matInput [value]="formData().name" (input)="updateField('name', $event)" [disabled]="isSaving()"
+          placeholder="Artist Name" required />
         <mat-icon matPrefix>palette</mat-icon>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="form-field full-width">
         <mat-label>Avatar Image URL</mat-label>
-        <input matInput [value]="formData().avatar" (input)="updateField('avatar', $event)" [disabled]="isSaving()" placeholder="https://..." />
+        <input matInput [value]="formData().avatar" (input)="updateField('avatar', $event)" [disabled]="isSaving()"
+          placeholder="https://..." />
         <mat-icon matPrefix>image</mat-icon>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="form-field full-width">
         <mat-label>Artist Biography / Statement</mat-label>
-        <textarea matInput rows="3" [value]="formData().bio" (input)="updateField('bio', $event)" [disabled]="isSaving()" placeholder="Enter artist statement or bio..."></textarea>
+        <textarea matInput rows="3" [value]="formData().bio" (input)="updateField('bio', $event)"
+          [disabled]="isSaving()" placeholder="Enter artist statement or bio..."></textarea>
         <mat-icon matPrefix>description</mat-icon>
       </mat-form-field>
     </div>
   </form>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end" class="dialog-actions">
+<mat-dialog-actions class="dialog-actions">
   <button mat-button type="button" (click)="dialogRef.close()" [disabled]="isSaving()">
     Cancel
   </button>
