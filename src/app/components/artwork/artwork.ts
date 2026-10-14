@@ -7,6 +7,7 @@ import {
   effect,
   ElementRef,
   inject,
+  linkedSignal,
   signal,
   viewChild,
 } from '@angular/core';
@@ -128,7 +129,7 @@ export class Artwork {
   // Artworks with valid prices, sorted ascending by price
   readonly sortedPriceArtworks = computed(() =>
     this.filteredArtworks()
-      .filter((art) => art.price != null && !isNaN(art.price))
+      .filter((art) => art.price != null)
       .sort((a, b) => a.price - b.price)
   );
 
@@ -138,8 +139,8 @@ export class Artwork {
   );
 
   // Price summary metrics derived dynamically from priceList()
-  readonly lowestPrice = computed(() => this.priceList()[0] ?? null);
-  readonly highestPrice = computed(() => this.priceList().at(-1) ?? null);
+  readonly lowestPrice = computed(() => this.priceList()[0] || null);
+  readonly highestPrice = computed(() => this.priceList()[this.priceList().length - 1] || null);
   readonly averagePrice = computed(() => {
     const prices = this.priceList();
     return prices.length ? Math.round(prices.reduce((sum, p) => sum + p, 0) / prices.length) : null;
@@ -187,11 +188,11 @@ export class Artwork {
   });
 
   // Total counts
-  readonly totalAllPiecesCount = computed(() => this.artworkList().length);
-  readonly totalPiecesCount = computed(() => this.filteredArtworks().length);
-  readonly totalMediaCount = computed(() => Object.keys(this.metricsDisplayData().media).length);
-  readonly totalStylesCount = computed(() => Object.keys(this.metricsDisplayData().style).length);
-  readonly totalAllArtistsCount = computed(() => new Set(this.artworkList().map((a) => a.artist_id || a.artist_name)).size);
+  readonly totalAllPiecesCount = linkedSignal(() => this.artworkList().length);
+  readonly totalPiecesCount = linkedSignal(() => this.filteredArtworks().length);
+  readonly totalMediaCount = linkedSignal(() => Object.keys(this.metricsDisplayData().media).length);
+  readonly totalStylesCount = linkedSignal(() => Object.keys(this.metricsDisplayData().style).length);
+  readonly totalAllArtistsCount = linkedSignal(() => new Set(this.artworkList().map((a) => a.artist_id || a.artist_name)).size);
   readonly isFiltered = computed(() => !!this.selectedMedia() || !!this.selectedStyle());
 
   // Filter interaction

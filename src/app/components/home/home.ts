@@ -44,10 +44,12 @@ import { CustomerDialog } from '../customer-dialog/customer-dialog';
   templateUrl: './home.html',
 })
 export class Home {
+
   private dialog = inject(MatDialog);
   readonly customersApi = inject(CustomerApi);
   readonly selectedView = signal<string>('card');
   readonly caseSensitive = signal<boolean>(false);
+  readonly fuzzySearch = signal<boolean>(false);
 
   selectMenu = [
     {
@@ -123,7 +125,9 @@ export class Home {
     if (!searchTerm.keyword || searchTerm.keyword.length < 2) return customerList;
 
     return customerList.filter((customer) => {
-      const regex = new RegExp(searchTerm.keyword, `g${caseSensitive ? '' : 'i'}`);
+      const searchKey = this.fuzzySearch() ? this.applyFuzzySearch(searchTerm.keyword) : searchTerm.keyword;
+
+      const regex = new RegExp(searchKey, `g${caseSensitive ? '' : 'i'}`);
       if (searchTerm.filter === '') {
         const stringifiedData = JSON.stringify(customer).replace(/[\{\}\,\:"]+/g, '').trim();
         return regex.test(stringifiedData);
@@ -144,6 +148,17 @@ export class Home {
 
   onRefresh(): void {
     this.customersResource.reload();
+  }
+
+  onFuzzySearchChange(checked: boolean): void {
+    this.fuzzySearch.set(checked);
+  }
+
+  applyFuzzySearch(search: string): string {
+    return search
+      .split('')
+      .map(char => `${char}.*`)
+      .join('');
   }
 
   clearSearch(): void {

@@ -56,9 +56,13 @@
 
       </div>
 
-      <div class="view-controls">
+      <div class="filter-controls">
         <mat-checkbox [checked]="caseSensitive()" (change)="onCaseSensitiveChange($event.checked)">
-          Case Sensitive</mat-checkbox>
+          Case Sensitive
+        </mat-checkbox>
+        <mat-checkbox [checked]="fuzzySearch()" (change)="onFuzzySearchChange($event.checked)">
+          Fuzzy Search
+        </mat-checkbox>
       </div>
     </form>
     <div class="errors">

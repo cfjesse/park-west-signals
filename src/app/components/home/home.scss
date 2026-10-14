@@ -126,9 +126,8 @@
     .view-controls {
       display: flex;
       align-items: center;
-      padding-top: 4px;
       flex-direction: column;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       gap: 4px;
 
       .toggle-group-wrapper {
