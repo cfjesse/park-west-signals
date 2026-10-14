@@ -117,7 +117,6 @@ export class Artwork {
       .map(([key, count]) => ({ key, label: key, count }))
   );
 
-  // Filtered artworks reacting to active dropdown filters
   readonly filteredArtworks = computed<ArtistData[]>(() => {
     const list = this.artworkList();
     const media = this.selectedMedia();
@@ -130,7 +129,6 @@ export class Artwork {
     );
   });
 
-  // Artworks with valid prices, sorted ascending by price
   readonly sortedPriceArtworks = computed(() =>
     this.filteredArtworks()
       .filter((art) => art.price != null)
@@ -199,13 +197,12 @@ export class Artwork {
   readonly totalAllArtistsCount = linkedSignal(() => new Set(this.artworkList().map((a) => a.artist_id || a.artist_name)).size);
   readonly isFiltered = computed(() => this.selectedMedia().length > 0 || this.selectedStyle().length > 0);
 
-  // Filter interaction
   onMediaChange(media: string[]): void {
-    this.selectedMedia.set(media ?? []);
+    this.selectedMedia.set(media || []);
   }
 
   onStyleChange(style: string[]): void {
-    this.selectedStyle.set(style ?? []);
+    this.selectedStyle.set(style || []);
   }
 
   toggleMediaFilter(media: string): void {
@@ -295,8 +292,13 @@ export class Artwork {
     }));
     const chart = this.charts.get('price');
 
+    const pointRadius = 4;
+    const pointHoverRadius = 7;
+
     if (chart && chart.canvas === canvas) {
       chart.data.datasets[0].data = data;
+      (chart.data.datasets[0] as any).pointRadius = pointRadius;
+      (chart.data.datasets[0] as any).pointHoverRadius = pointHoverRadius;
       chart.update();
       return;
     }
@@ -315,11 +317,11 @@ export class Artwork {
             fill: true,
             tension: 0.35,
             borderWidth: 2,
-            pointRadius: artworks.length > 50 ? 0 : 3,
-            pointHoverRadius: 6,
+            pointRadius,
+            pointHoverRadius,
             pointBackgroundColor: '#059669',
             pointBorderColor: '#ffffff',
-            pointBorderWidth: 2,
+            pointBorderWidth: 1.5,
           }],
         },
         options: this.getLineChartOptions(),
@@ -380,7 +382,7 @@ export class Artwork {
             title: (items: any[]) => items[0]?.raw?.title || 'Artwork',
             label: (ctx: any) => {
               const { y, artist } = ctx.raw || {};
-              const price = y ?? ctx.parsed?.y ?? 0;
+              const price = y || ctx.parsed?.y || 0;
               return `${artist ? ` by ${artist}` : ''} • $${Number(price).toLocaleString()}`;
             },
           },
