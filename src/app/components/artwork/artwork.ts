@@ -95,14 +95,11 @@ export class Artwork {
   private destroyRef = inject(DestroyRef);
   private artworkListApiResource = this.artworkApi.artworkListResource;
 
-  // Signal holding all artworks from API resource
   readonly artworkList = computed(() => this.artworkListApiResource.value() || []);
 
-  // Filter signals (multi-select arrays)
   selectedMedia = signal<string[]>([]);
   selectedStyle = signal<string[]>([]);
 
-  // Overall catalog metrics for dropdown options
   readonly catalogMetrics = computed(() => aggregateCategories(this.artworkList()));
 
   readonly mediaOptions = computed(() =>
@@ -135,12 +132,10 @@ export class Artwork {
       .sort((a, b) => a.price - b.price)
   );
 
-  // Dynamic priceList signal: sorted array of prices from filtered artworks
   readonly priceList = computed<number[]>(() =>
     this.sortedPriceArtworks().map((art) => art.price)
   );
 
-  // Price summary metrics derived dynamically from priceList()
   readonly lowestPrice = linkedSignal(() => this.priceList()[0] || null);
   readonly highestPrice = linkedSignal(() => this.priceList()[this.priceList().length - 1] || null);
   readonly averagePrice = computed(() => {
@@ -154,10 +149,8 @@ export class Artwork {
     return prices.length % 2 !== 0 ? prices[mid] : Math.round((prices[mid - 1] + prices[mid]) / 2);
   });
 
-  // Filtered metrics for mediums and styles
   readonly metricsDisplayData = computed(() => aggregateCategories(this.filteredArtworks()));
 
-  // Grouped filtered artists and the pieces they have in the selected category
   readonly filteredArtists = computed<ArtistDisplayData[]>(() => {
     const artworks = this.filteredArtworks();
     if (!artworks.length) return [];
@@ -189,7 +182,6 @@ export class Artwork {
     return Array.from(map.values());
   });
 
-  // Total counts
   readonly totalAllPiecesCount = linkedSignal(() => this.artworkList().length);
   readonly totalPiecesCount = linkedSignal(() => this.filteredArtworks().length);
   readonly totalMediaCount = linkedSignal(() => Object.keys(this.metricsDisplayData().media).length);
@@ -222,7 +214,6 @@ export class Artwork {
     this.selectedStyle.set([]);
   }
 
-  // Chart view children
   mediaChartCanvas = viewChild<ElementRef<HTMLCanvasElement>>('mediaChartCanvas');
   styleChartCanvas = viewChild<ElementRef<HTMLCanvasElement>>('styleChartCanvas');
   priceChartCanvas = viewChild<ElementRef<HTMLCanvasElement>>('priceChartCanvas');
@@ -230,7 +221,6 @@ export class Artwork {
   private charts = new Map<string, Chart>();
 
   constructor() {
-    // Reactively update all charts whenever filter signals or filteredArtworks change
     effect(() => {
       const mediaEl = this.mediaChartCanvas()?.nativeElement;
       const styleEl = this.styleChartCanvas()?.nativeElement;

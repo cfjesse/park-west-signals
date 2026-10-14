@@ -13,14 +13,8 @@ export class CustomerApi {
     method: 'GET',
   }));
 
-  /**
-   * Reactive payload signal to trigger an update via httpResource.
-   */
   readonly updatePayload = signal<{ id: string; body: Partial<Customer> } | undefined>(undefined);
 
-  /**
-   * Reactive update resource using httpResource with PATCH method and JSON payload.
-   */
   readonly updateCustomerResource = httpResource<Customer>(() => {
     const payload = this.updatePayload();
     if (!payload) return undefined;
@@ -34,9 +28,6 @@ export class CustomerApi {
     };
   });
 
-  /**
-   * Formatted error message derived reactively from updateCustomerResource.error().
-   */
   readonly updateError = computed<string | null>(() => {
     const err = this.updateCustomerResource.error() as HttpErrorResponse | null;
     if (!err) return null;
@@ -47,16 +38,10 @@ export class CustomerApi {
     return api?.error || err.message || 'Failed to update record';
   });
 
-  /**
-   * Trigger an update request via signals.
-   */
   updateCustomer(id: string, body: Partial<Customer>) {
     this.updatePayload.set({ id, body });
   }
 
-  /**
-   * Reset update state.
-   */
   resetUpdate() {
     this.updatePayload.set(undefined);
   }

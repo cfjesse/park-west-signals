@@ -15,7 +15,6 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Material theme variable fine-tuning */
 :root {
   --primary-azure: #005cbb;
   --primary-azure-container: #d7e3ff;
@@ -24,7 +23,6 @@ html, body {
   --border-subtle: #e2e7f0;
 }
 
-/* Angular Material Dialog panel polish */
 .mat-mdc-dialog-panel {
   .mat-mdc-dialog-surface {
     border-radius: 20px !important;

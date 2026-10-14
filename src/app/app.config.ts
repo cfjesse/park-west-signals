@@ -7,7 +7,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    // Step: Provide HttpClient to enable httpResource() throughout the application
     provideHttpClient(),
   ],
 };
